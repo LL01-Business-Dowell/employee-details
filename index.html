@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 35px;
+            font-size: 0.95rem;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="text"]:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c53030;
+        }
+
+        .results {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .results::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .results::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 12px;
+        }
+
+        .result-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item:hover {
+            background: #f7fafc;
+            transform: translateX(5px);
+        }
+
+        .result-item.selected {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .result-id {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .view-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .view-btn.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .view-btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .view-btn.active:active {
+            transform: translateY(0);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #718096;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Employee Search</h1>
+        <p class="subtitle">Search by name or employee ID</p>
+        
+        <div id="errorDiv"></div>
+        <div id="loadingDiv"></div>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Enter name or employee ID..."
+                autocomplete="off"
+                disabled
+            >
+        </div>
+
+        <div class="results" id="results"></div>
+
+        <button class="view-btn" id="viewBtn">View Details</button>
+    </div>
+
+    <script>
+        // CONFIGURATION: Replace this with your Google Sheets CSV URL
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZD8n_V65oLVJIcZ85iX_9XaF-p9-B6A1oz3yA4D0lxsmVkdi7Dh1c5E9XyjTr3c5dEBD2aZgz8UoQ/pub?gid=0&single=true&output=csv';
+        
+        let employees = [];
+        let selectedEmployee = null;
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+        const viewBtn = document.getElementById('viewBtn');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const errorDiv = document.getElementById('errorDiv');
+
+        // Load data from Google Sheets
+        async function loadEmployeeData() {
+            loadingDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Loading employee data...</div>';
+            
+            try {
+                const response = await fetch(SHEET_CSV_URL);
+                if (!response.ok) throw new Error('Failed to fetch data');
+                
+                const csvText = await response.text();
+                employees = parseCSV(csvText);
+                
+                loadingDiv.innerHTML = '';
+                searchInput.disabled = false;
+                searchInput.focus();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                errorDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading data!</strong><br>
+                        Please check the Google Sheets URL in the configuration.
+                    </div>
+                `;
+                loadingDiv.innerHTML = '';
+            }
+        }
+
+        // Parse CSV data
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+            
+            return lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                const obj = {};
+                
+                headers.forEach((header, index) => {
+                    obj[header] = values[index] ? values[index].trim() : '';
+                });
+                
+                return obj;
+            }).filter(emp => emp.Name && emp['Employee ID']); // Filter out empty rows
+        }
+
+        // Parse CSV line handling quoted values
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            
+            return result.map(v => v.replace(/^["']|["']$/g, ''));
+        }
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length === 0) {
+                resultsDiv.innerHTML = '';
+                selectedEmployee = null;
+                viewBtn.classList.remove('active');
+                return;
+            }
+
+            const filtered = employees.filter(emp => 
+                (emp.Name && emp.Name.toLowerCase().includes(query)) || 
+                (emp['Employee ID'] && emp['Employee ID'].toLowerCase().includes(query))
+            );
+
+            displayResults(filtered);
+        });
+
+        function displayResults(results) {
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No employees found</div>';
+                selectedEmployee = null;
+                viewBtn.classList.remove('active');
+                return;
+            }
+
+            resultsDiv.innerHTML = results.map(emp => `
+                <div class="result-item" data-id="${emp['Employee ID']}">
+                    <div class="result-name">${emp.Name}</div>
+                    <div class="result-id">ID: ${emp['Employee ID']}</div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.result-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    selectedEmployee = results.find(emp => emp['Employee ID'] === item.dataset.id);
+                    viewBtn.classList.add('active');
+                });
+            });
+        }
+
+        viewBtn.addEventListener('click', () => {
+            if (selectedEmployee) {
+                localStorage.setItem('selectedEmployee', JSON.stringify(selectedEmployee));
+                window.location.href = 'details.html';
+            }
+        });
+
+        // Load data on page load
+        loadEmployeeData();
+    </script>
+</body>
+</html>
