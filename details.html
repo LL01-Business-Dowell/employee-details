@@ -66,8 +66,8 @@
         }
 
         .avatar {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
@@ -78,6 +78,15 @@
             margin: 0 auto 20px;
             font-weight: 700;
             animation: scaleIn 0.5s ease-out 0.2s both;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         @keyframes scaleIn {
@@ -236,6 +245,7 @@
         <div class="details-grid" id="detailsGrid"></div>
 
         <div class="actions">
+            <button class="btn btn-secondary" onclick="window.print()">Print Details</button>
             <button class="btn btn-primary" onclick="window.location.href='index.html'">Search Another</button>
         </div>
     </div>
